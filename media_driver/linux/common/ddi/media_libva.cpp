@@ -4726,6 +4726,11 @@ static VAStatus DdiMedia_CopySurfaceToImage(
             DDI_NORMALMESSAGE("surface Decompression fail, continue next steps.");
         }
     }
+
+    if ((nullptr != surface) && (Media_Format_CPU != surface->format))
+    {
+        DDI_CHK_RET(DdiMedia_MediaMemoryDecompress(mediaCtx, surface),"MMD unsupported!");
+    }
     void *surfData = DdiMediaUtil_LockSurface(surface, (MOS_LOCKFLAG_READONLY | MOS_LOCKFLAG_NO_SWIZZLE));
     if (surfData == nullptr)
     {
@@ -5088,6 +5093,7 @@ VAStatus DdiMedia_PutImage(
         //Lock Surface
         if ((nullptr != buf->pSurface) && (Media_Format_CPU != mediaSurface->format))
         {
+
             vaStatus = DdiMedia_MediaMemoryDecompress(mediaCtx, mediaSurface);
 
             if (vaStatus != VA_STATUS_SUCCESS)
@@ -5095,6 +5101,8 @@ VAStatus DdiMedia_PutImage(
                 DDI_NORMALMESSAGE("surface Decompression fail, continue next steps.");
             }
         }
+
+        DDI_CHK_RET(DdiMedia_MediaMemoryDecompress(mediaCtx, mediaSurface),"MMD unsupported!");
 
         void *surfData = DdiMediaUtil_LockSurface(mediaSurface, (MOS_LOCKFLAG_READONLY | MOS_LOCKFLAG_WRITEONLY));
         if (nullptr == surfData)
