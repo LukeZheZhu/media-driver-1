@@ -220,7 +220,8 @@ static bool InitTglMediaSku(struct GfxDeviceInfo *devInfo,
     MOS_UserFeature_ReadValue_ID(
         nullptr,
         __MEDIA_USER_FEATURE_VALUE_ENABLE_VEBOX_SCALABILITY_MODE_ID,
-        &userFeatureData);
+        &userFeatureData,
+        nullptr);
     if (userFeatureData.i32Data)
     {
         MEDIA_WR_SKU(skuTable, FtrContextBasedScheduling, 1);
@@ -237,7 +238,8 @@ static bool InitTglMediaSku(struct GfxDeviceInfo *devInfo,
     MOS_UserFeature_ReadValue_ID(
         nullptr,
         __MEDIA_USER_FEATURE_VALUE_DISABLE_MMC_ID,
-        &userFeatureData);
+        &userFeatureData,
+        nullptr);
     if (userFeatureData.bData)
     {
         disableMMC = true;
@@ -311,7 +313,8 @@ static bool InitTglMediaWa(struct GfxDeviceInfo *devInfo,
     MOS_UserFeature_ReadValue_ID(
         nullptr,
         __MEDIA_USER_FEATURE_VALUE_AUX_TABLE_16K_GRANULAR_ID,
-        &userFeatureData);
+        &userFeatureData,
+        nullptr);
 
     MEDIA_WR_WA(waTable, WaDummyReference, 1);
 
@@ -364,7 +367,8 @@ static bool InitDG1MediaSku(struct GfxDeviceInfo *devInfo,
     MOS_UserFeature_ReadValue_ID(
         nullptr,
         __VPHAL_ENABLE_MMC_ID,
-        &userFeatureData);
+        &userFeatureData,
+        nullptr);
     if (userFeatureData.bData)
     {
         enableVPMMC = true;
@@ -374,7 +378,8 @@ static bool InitDG1MediaSku(struct GfxDeviceInfo *devInfo,
     MOS_UserFeature_ReadValue_ID(
         nullptr,
         __MEDIA_USER_FEATURE_VALUE_CODEC_MMC_ENABLE_ID,
-        &userFeatureData);
+        &userFeatureData,
+        nullptr);
     if (userFeatureData.bData)
     {
         enableCodecMMC = true;
