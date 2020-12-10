@@ -6032,7 +6032,11 @@ DdiMedia_Copy(
     VAStatus vaStatus = VA_STATUS_SUCCESS;
     MOS_CONTEXT  mosCtx;
     MOS_RESOURCE src, dst;
-    DdiCpInterface *pCpDdiInterface;
+    DdiCpInterface *pCpDdiInterface = nullptr;
+    PDDI_MEDIA_SURFACE src_surface = nullptr;
+    PDDI_MEDIA_SURFACE dst_surface = nullptr;
+    PDDI_MEDIA_BUFFER src_buffer = nullptr;
+    PDDI_MEDIA_BUFFER dst_buffer = nullptr;
 
     DDI_FUNCTION_ENTER();
 
@@ -6048,7 +6052,7 @@ DdiMedia_Copy(
     if (dst_obj->obj_type == VACopyObjectSurface)
     {
         DDI_CHK_LESS((uint32_t)dst_obj->object.surface_id, mediaCtx->pSurfaceHeap->uiAllocatedHeapElements, "copy_dst", VA_STATUS_ERROR_INVALID_SURFACE);
-        PDDI_MEDIA_SURFACE dst_surface = DdiMedia_GetSurfaceFromVASurfaceID(mediaCtx, dst_obj->object.surface_id);
+        dst_surface = DdiMedia_GetSurfaceFromVASurfaceID(mediaCtx, dst_obj->object.surface_id);
         DDI_CHK_NULL(dst_surface, "nullptr surface", VA_STATUS_ERROR_INVALID_SURFACE);
         DDI_CHK_NULL(dst_surface->pGmmResourceInfo, "nullptr dst_surface->pGmmResourceInfo", VA_STATUS_ERROR_INVALID_PARAMETER);
 
@@ -6058,7 +6062,7 @@ DdiMedia_Copy(
     else if (dst_obj->obj_type == VACopyObjectBuffer)
     {
         DDI_CHK_LESS((uint32_t)dst_obj->object.buffer_id, mediaCtx->pBufferHeap->uiAllocatedHeapElements, "Invalid copy dst buf_id", VA_STATUS_ERROR_INVALID_BUFFER);
-        PDDI_MEDIA_BUFFER dst_buffer = DdiMedia_GetBufferFromVABufferID(mediaCtx, dst_obj->object.buffer_id);
+        dst_buffer = DdiMedia_GetBufferFromVABufferID(mediaCtx, dst_obj->object.buffer_id);
         DDI_CHK_NULL(dst_buffer, "nullptr buffer", VA_STATUS_ERROR_INVALID_BUFFER);
         DDI_CHK_NULL(dst_buffer->pGmmResourceInfo, "nullptr dst_buffer->pGmmResourceInfo", VA_STATUS_ERROR_INVALID_PARAMETER);
 
@@ -6073,7 +6077,7 @@ DdiMedia_Copy(
     if (src_obj->obj_type == VACopyObjectSurface)
     {
         DDI_CHK_LESS((uint32_t)src_obj->object.surface_id, mediaCtx->pSurfaceHeap->uiAllocatedHeapElements, "copy_src", VA_STATUS_ERROR_INVALID_SURFACE);
-        PDDI_MEDIA_SURFACE src_surface = DdiMedia_GetSurfaceFromVASurfaceID(mediaCtx, src_obj->object.surface_id);
+        src_surface = DdiMedia_GetSurfaceFromVASurfaceID(mediaCtx, src_obj->object.surface_id);
         DDI_CHK_NULL(src_surface, "nullptr surface", VA_STATUS_ERROR_INVALID_SURFACE);
         DDI_CHK_NULL(src_surface->pGmmResourceInfo, "nullptr src_surface->pGmmResourceInfo", VA_STATUS_ERROR_INVALID_PARAMETER);
 
@@ -6083,7 +6087,7 @@ DdiMedia_Copy(
     else if (src_obj->obj_type == VACopyObjectBuffer)
     {
         DDI_CHK_LESS((uint32_t)src_obj->object.buffer_id, mediaCtx->pBufferHeap->uiAllocatedHeapElements, "Invalid copy dst buf_id", VA_STATUS_ERROR_INVALID_BUFFER);
-        PDDI_MEDIA_BUFFER src_buffer = DdiMedia_GetBufferFromVABufferID(mediaCtx, src_obj->object.buffer_id);
+        src_buffer = DdiMedia_GetBufferFromVABufferID(mediaCtx, src_obj->object.buffer_id);
         DDI_CHK_NULL(src_buffer, "nullptr buffer", VA_STATUS_ERROR_INVALID_BUFFER);
         DDI_CHK_NULL(src_buffer->pGmmResourceInfo, "nullptr src_buffer->pGmmResourceInfo", VA_STATUS_ERROR_INVALID_PARAMETER);
 
@@ -6123,6 +6127,15 @@ DdiMedia_Copy(
     }
 
     vaStatus = DdiMedia_CopyInternal(&mosCtx, &src, &dst, option.bits.va_copy_mode);
+
+    if (option.bits.va_copy_sync == VA_EXEC_SYNC)
+    {
+        uint32_t timeout_NS = 100000000;
+        while (0 != mos_gem_bo_wait(dst_surface->bo, timeout_NS))
+        {
+            // Just loop while gem_bo_wait times-out.
+        }
+    }
 
     if (pCpDdiInterface)
     {
